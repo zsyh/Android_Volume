@@ -2,18 +2,24 @@ package com.zaizai.volume;
 
 
 import java.util.Queue;
-
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -28,9 +34,13 @@ public class MainActivity extends Activity {
 	  Object mLock;
 	
 
+	private CheckBox checkBoxAlarm;
 	private TextView textView;
 	private Handler handler = new MyHandler();
-
+	
+	private MediaPlayer mp;
+	boolean delayComplete=false;
+	boolean alarmChecked=false;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -38,9 +48,60 @@ public class MainActivity extends Activity {
 		
 		String s="";
 		textView=(TextView)findViewById(R.id.textView);
+		checkBoxAlarm=(CheckBox)findViewById(R.id.checkBoxAlarm);
 		mLock = new Object();//1
 		getNoiseLevel();//2
 		
+		
+checkBoxAlarm.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            
+            @Override
+            public void onCheckedChanged(CompoundButton arg0, boolean checked) {
+                // TODO Auto-generated method stub
+            	if(checked)
+            	{
+            		alarmChecked=true;
+            	}else
+            	{
+            		alarmChecked=false;
+            	}
+            }
+        });
+		
+
+	
+		mp = MediaPlayer.create(this,R.raw.apdisconnect); 
+
+		Timer timer = new Timer();//启动延时
+        timer.schedule(new TimerTask() {
+            public void run() {
+            	delayComplete=true;//设定指定事件
+            }
+        }, 500);// 设定指定的时间time,此处为500毫秒
+        
+		
+		/* 当MediaPlayer.OnCompletionLister会运行的Listener */
+		mp.setOnCompletionListener(  
+		          new MediaPlayer.OnCompletionListener()   
+		        {   
+		          // @Override   
+		          public void onCompletion(MediaPlayer arg0)   
+		          {   
+		           
+		        	  //播放完毕后延时1秒
+		        	  
+		           	  Timer timer = new Timer();
+		              timer.schedule(new TimerTask() {
+		                  public void run() {
+		                  	delayComplete=true;//设定指定事件
+		                  }
+		              }, 500);// 设定指定的时间time,此处为500毫秒
+		     
+		              
+		              
+		        	  
+		          }   
+		        });   
 	
 		
  }        
@@ -55,7 +116,11 @@ public class MainActivity extends Activity {
         mAudioRecord.stop();
        // mAudioRecord.release();
        // mAudioRecord = null;
-  
+        if(mp !=null)  
+        {  
+         //mp.stop();  //音乐停止播放
+         mp.release();//释放资源
+        }  
       
 	
 	}
@@ -96,13 +161,28 @@ public class MainActivity extends Activity {
 	                	i--;
 	                }
 				}
-				
+				else if(msg.what==2)
+				{
+					
+					try {       //音乐开始播放
+					     if(mp != null)  
+					     {  
+					      mp.stop();  
+					     }      
+					     mp.prepare();  
+					     mp.start();  
+					     delayComplete=false;//设定延时未到，避免因声音短路造成重复播放
+					    		 
+					    } catch (Exception e) {  
+					   
+					     e.printStackTrace();  //播放发生异常
+					    }      
 				
 
 				}
                
-		}
-	    
+			}
+	    }
 	 
 	
 	 
@@ -141,7 +221,14 @@ public class MainActivity extends Activity {
 	          // 平方和除以数据总长度，得到音量大小。
 	          double mean = v / (double) r;
 	          double volume = 10 * Math.log10(mean);
-	         
+	          if(alarmChecked&&  delayComplete && volume>50 )
+	          {
+	        	  Message msg = handler.obtainMessage();//线程通信，传递数据
+	  	    		msg.what=2;
+	  	    		handler.sendMessage(msg);
+	        	  
+	          }
+	
 	        	Message msg = handler.obtainMessage();//线程通信，传递数据
 	    		msg.what=1;
 	    		data.putDouble("volume", volume);; 

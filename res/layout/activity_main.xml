@@ -16,5 +16,12 @@
         android:singleLine="false"
          />
 
+    <CheckBox
+        android:id="@+id/checkBoxAlarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="播放警报声" />
 
 </RelativeLayout>
