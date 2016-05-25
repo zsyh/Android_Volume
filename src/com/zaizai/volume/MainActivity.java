@@ -15,11 +15,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -36,8 +40,13 @@ public class MainActivity extends Activity {
 
 	private CheckBox checkBoxAlarm;
 	private TextView textView;
+	private EditText editTextTrigger;
+	private Button btnSetTrigger;
+	private TextView textViewTrigger;
+	
 	private Handler handler = new MyHandler();
 	
+	private Double triggerVolume;
 	private MediaPlayer mp;
 	boolean delayComplete=false;
 	boolean alarmChecked=false;
@@ -49,6 +58,33 @@ public class MainActivity extends Activity {
 		String s="";
 		textView=(TextView)findViewById(R.id.textView);
 		checkBoxAlarm=(CheckBox)findViewById(R.id.checkBoxAlarm);
+		editTextTrigger=(EditText)findViewById(R.id.editTextTrigger);
+		btnSetTrigger=(Button)findViewById(R.id.btnSetTrigger);
+		textViewTrigger=(TextView)findViewById(R.id.textViewTrigger);
+		
+		
+		triggerVolume=50.0;
+		textViewTrigger.setText("阈值:"+triggerVolume);
+		btnSetTrigger.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View view) {
+				Double temp=Double.parseDouble(editTextTrigger.getText().toString());
+				if(temp<20 || temp>90){
+					Toast.makeText(getApplicationContext(),"阈值设定不成功!请输入20到90之间的数字",Toast.LENGTH_SHORT).show();
+					return;
+				}
+				
+				
+				triggerVolume=temp;
+				textViewTrigger.setText("阈值:"+triggerVolume);
+			}
+		});
+		
+		
+		
+		
+		
 		mLock = new Object();//1
 		getNoiseLevel();//2
 		
@@ -184,7 +220,8 @@ checkBoxAlarm.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			}
 	    }
 	 
-	
+	    double lastVolume2=0;
+		 double lastVolume1=0;
 	 
 	  public void getNoiseLevel() {
 	    if (isGetVoiceRun) {
@@ -199,8 +236,8 @@ checkBoxAlarm.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 	    }
 	    isGetVoiceRun = true;
 	 
+	
 	    
-
 	    new Thread(new Runnable() {
 	      @Override
 	      public void run() {
@@ -221,13 +258,19 @@ checkBoxAlarm.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 	          // 平方和除以数据总长度，得到音量大小。
 	          double mean = v / (double) r;
 	          double volume = 10 * Math.log10(mean);
-	          if(alarmChecked&&  delayComplete && volume>50 )
+
+	          
+	          if(!((lastVolume1-volume) >15 && (lastVolume1 -lastVolume2)>20) &&  alarmChecked &&  delayComplete && lastVolume1>triggerVolume )
 	          {
 	        	  Message msg = handler.obtainMessage();//线程通信，传递数据
 	  	    		msg.what=2;
 	  	    		handler.sendMessage(msg);
-	        	  
 	          }
+	          
+ 
+	          lastVolume2=lastVolume1;
+	          lastVolume1=volume;
+	          
 	
 	        	Message msg = handler.obtainMessage();//线程通信，传递数据
 	    		msg.what=1;

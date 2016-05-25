@@ -15,13 +15,39 @@
         android:text="@string/hello_world"
         android:singleLine="false"
          />
+	 <TextView
+        android:id="@+id/textViewTrigger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        android:textSize="15sp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+         />	
 
+    <Button
+        android:id="@+id/btnSetTrigger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/editTextTrigger"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/textViewTrigger"
+        android:text="设定" />
+
+    <EditText 
+        android:id="@+id/editTextTrigger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="阈值"
+        android:layout_toLeftOf="@id/btnSetTrigger"
+        android:layout_below="@id/textViewTrigger"
+        />
     <CheckBox
         android:id="@+id/checkBoxAlarm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+		android:layout_below="@id/btnSetTrigger"
+		android:layout_alignParentRight="true"
         android:text="播放警报声" />
 
 </RelativeLayout>
